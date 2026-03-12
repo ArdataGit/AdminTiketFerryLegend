@@ -1,0 +1,665 @@
+@extends('template.admin-dashboard')
+
+@section('title', 'Master User')
+
+@push('style')
+<style>
+/* Style for empty state */
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+</style>
+@endpush
+
+@section('content')
+<div class="dashboard-content">
+    <h2 class="mb-4">Master User</h2>
+
+    <!-- Search input and Add User button -->
+    <div class="mb-3 row">
+        <div class="col-6">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari User..." 
+                   style="max-width: 300px;" @if($users->isEmpty()) disabled @endif>
+        </div>
+        <div class="col-6">
+            <button id="addUserButton" class="btn btn-primary" style="float: inline-end;" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="icofont-plus"></i> Tambah User
+            </button>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="alert-container">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    </div>
+
+    <!-- User Table -->
+    @if ($users->isNotEmpty())
+        <div class="dashboard__table table-responsive">
+            <table class="table">
+                <thead class="table-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>NIK</th>
+                        <th>Email</th>
+                        <th>Foto KTP</th>
+                        <th>Foto Selfie</th>
+                        <th>Alamat</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body">
+                    @foreach ($users as $item)
+                        <tr data-id="{{ $item->id }}">
+                            <td>{{ $item->id }}</td>
+                            <td>{{ $item->nama }}</td>
+                            <td>{{ $item->nik }}</td>
+                            <td>{{ $item->email }}</td>
+                            <td>
+                                @if($item && $item->gambarktp)
+                                    <a href="#" 
+                                       class="preview-link text-primary" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#imagePreviewModal" 
+                                       data-img-src="{{ asset("img/user/{$item->id}/gambarktp/{$item->gambarktp}") }}">
+                                        Lihat Foto
+                                    </a>
+                                @else
+                                    <span class="text-muted">No Image</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($item && $item->fotoselfie)
+                                    <a href="#" 
+                                       class="preview-link text-primary" 
+                                       data-bs-toggle="modal" 
+                                       data-bs-target="#imagePreviewModal" 
+                                       data-img-src="{{ asset("img/user/{$item->id}/fotoselfie/{$item->fotoselfie}") }}">
+                                        Lihat Foto
+                                    </a>
+                                @else
+                                    <span class="text-muted">No Image</span>
+                                @endif
+                            </td>
+                            <td>{{ $item->alamat }}</td>
+                            <td>{{ ucfirst($item->status) }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning edit-btn" 
+                                        data-id="{{ $item->id }}" 
+                                        data-nama="{{ $item->nama }}" 
+                                        data-nik="{{ $item->nik }}" 
+                                        data-email="{{ $item->email }}" 
+                                        data-alamat="{{ $item->alamat }}" 
+                                        data-status="{{ $item->status }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editUserModal">
+                                    <i class="icofont-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-btn" 
+                                        data-id="{{ $item->id }}" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteUserModal">
+                                    <i class="icofont-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="empty-state">
+            <p>No users available. Click "Tambah User" to add a new user.</p>
+        </div>
+    @endif
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Tambah User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addUserForm" action="{{ route('user.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="nama" class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="nama" name="nama" required>
+                            @error('nama')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="nik" class="form-label">NIK</label>
+                            <input type="number" class="form-control" id="nik" name="nik" required>
+                            @error('nik')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            @error('email')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            @error('password')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="gambarktp" class="form-label">Foto KTP</label>
+                            <input type="file" class="form-control" id="gambarktp" name="gambarktp" accept="image/*" required>
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('gambarktp')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="fotoselfie" class="form-label">Foto Selfie</label>
+                            <input type="file" class="form-control" id="fotoselfie" name="fotoselfie" accept="image/*" required>
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('fotoselfie')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="alamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="alamat" name="alamat" rows="4" required></textarea>
+                            @error('alamat')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-control" id="status" name="status" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            @error('status')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editUserForm" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="id" id="edit_id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="edit_nama" class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="edit_nama" name="nama" required>
+                            @error('nama')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_nik" class="form-label">NIK</label>
+                            <input type="number" class="form-control" id="edit_nik" name="nik" required>
+                            @error('nik')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email" name="email" required>
+                            @error('email')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_password" class="form-label">Password (optional)</label>
+                            <input type="password" class="form-control" id="edit_password" name="password" placeholder="Enter new password">
+                            @error('password')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_gambarktp" class="form-label">Foto KTP</label>
+                            <input type="file" class="form-control" id="edit_gambarktp" name="gambarktp" accept="image/*">
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('gambarktp')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_fotoselfie" class="form-label">Foto Selfie</label>
+                            <input type="file" class="form-control" id="edit_fotoselfie" name="fotoselfie" accept="image/*">
+                            <div class="form-text">Format: JPG, JPEG, PNG. Max: 2MB</div>
+                            @error('fotoselfie')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_alamat" class="form-label">Alamat</label>
+                            <textarea class="form-control" id="edit_alamat" name="alamat" rows="4" required></textarea>
+                            @error('alamat')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_status" class="form-label">Status</label>
+                            <select class="form-control" id="edit_status" name="status" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            @error('status')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imagePreviewModalLabel">Image Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="previewImage" src="" alt="Image Preview" style="max-width: 100%; max-height: 500px; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="deleteUserForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="id" id="delete_id">
+                    <div class="modal-body">
+                        Are you sure you want to delete this user?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) {
+        console.error('CSRF token not found.');
+        alert('CSRF token is missing. Please contact the administrator.');
+        return;
+    }
+
+    // Store table data for search filtering
+    let tableData = [];
+
+    // Function to close modal and restore scroll
+    function closeModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        
+        // Move focus to the "Tambah User" button before hiding the modal
+        const focusTarget = document.getElementById('addUserButton');
+        if (focusTarget) {
+            focusTarget.focus();
+        }
+
+        modal.hide();
+        
+        // Remove backdrop and restore scroll
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = ''; // Restore scroll
+    }
+
+    // Handle modal hidden event to ensure focus is managed
+    ['addUserModal', 'editUserModal', 'deleteUserModal', 'imagePreviewModal'].forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            // Ensure focus is moved to a safe element after modal is hidden
+            const focusTarget = document.getElementById('addUserButton');
+            if (focusTarget) {
+                focusTarget.focus();
+            }
+            // Additional cleanup for scroll
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        });
+    });
+
+    // Function to show alerts
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alert-container');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.setAttribute('role', 'alert');
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alert);
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 3000);
+    }
+
+    // Function to refresh table data
+    function refreshTable(search = '') {
+        let url = '{{ route('user.data') }}';
+        if (search) url += '?search=' + encodeURIComponent(search);
+
+        fetch(url, {
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            tableData = Array.isArray(data) ? data : []; // Store data for search
+            renderTable(tableData);
+            // Update search input state
+            const searchInput = document.getElementById('searchInput');
+            searchInput.disabled = tableData.length === 0;
+        })
+        .catch(error => {
+            console.error('Error fetching table data:', error);
+            showAlert('danger', 'Failed to refresh table data.');
+        });
+    }
+
+    // Function to render table with filtered data
+    function renderTable(data) {
+        const tbody = document.getElementById('user-table-body');
+        const tableContainer = document.querySelector('.dashboard__table');
+        const emptyState = document.querySelector('.empty-state');
+
+        if (!data || data.length === 0) {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            return;
+        }
+
+        if (tableContainer) tableContainer.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
+
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            if (!item) return;
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', item.id || '');
+            row.innerHTML = `
+                <td>${item.id || '-'}</td>
+                <td>${item.nama || '-'}</td>
+                <td>${item.nik || '-'}</td>
+                <td>${item.email || '-'}</td>
+                <td>${item.gambarktp ? 
+                    `<a href="#" 
+                        class="preview-link text-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#imagePreviewModal" 
+                        data-img-src="{{ asset('img/user') }}/${item.id}/gambarktp/${item.gambarktp}">
+                        Lihat Foto
+                    </a>` : 
+                    '<span class="text-muted">No Image</span>'}</td>
+                <td>${item.fotoselfie ? 
+                    `<a href="#" 
+                        class="preview-link text-primary" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#imagePreviewModal" 
+                        data-img-src="{{ asset('img/user') }}/${item.id}/fotoselfie/${item.fotoselfie}">
+                        Lihat Foto
+                    </a>` : 
+                    '<span class="text-muted">No Image</span>'}</td>
+                <td>${item.alamat || '-'}</td>
+                <td>${item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1)) : '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning edit-btn" 
+                            data-id="${item.id || ''}" 
+                            data-nama="${item.nama || ''}" 
+                            data-nik="${item.nik || ''}" 
+                            data-email="${item.email || ''}" 
+                            data-alamat="${item.alamat || ''}" 
+                            data-status="${item.status || ''}"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editUserModal">
+                        <i class="icofont-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="${item.id || ''}" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteUserModal">
+                        <i class="icofont-trash"></i> Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachButtonListeners();
+    }
+
+    // Function to filter table based on search input
+    function filterTable(searchTerm) {
+        const filteredData = tableData.filter(item => {
+            if (!item) return false;
+            const searchText = searchTerm.toLowerCase();
+            return (
+                (item.id && item.id.toString().includes(searchText)) ||
+                (item.nama && item.nama.toLowerCase().includes(searchText)) ||
+                (item.nik && item.nik.toString().includes(searchText)) ||
+                (item.email && item.email.toLowerCase().includes(searchText)) ||
+                (item.alamat && item.alamat.toLowerCase().includes(searchText)) ||
+                (item.status && item.status.toLowerCase().includes(searchText))
+            );
+        });
+        renderTable(filteredData);
+    }
+
+    // Search input event listener
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+        if (this.disabled) return; // Ignore input if disabled
+        const searchTerm = this.value.trim();
+        filterTable(searchTerm);
+    });
+
+    // Function to attach event listeners to buttons
+    function attachButtonListeners() {
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const nama = this.getAttribute('data-nama') || '';
+                const nik = this.getAttribute('data-nik') || '';
+                const email = this.getAttribute('data-email') || '';
+                const alamat = this.getAttribute('data-alamat') || '';
+                const status = this.getAttribute('data-status') || '';
+                document.getElementById('edit_id').value = id;
+                document.getElementById('edit_nama').value = nama;
+                document.getElementById('edit_nik').value = nik;
+                document.getElementById('edit_email').value = email;
+                document.getElementById('edit_alamat').value = alamat;
+                document.getElementById('edit_status').value = status;
+                document.getElementById('edit_password').value = ''; // Clear password field
+                document.getElementById('editUserForm').action = `{{ url('dashboard/master-user') }}/${id}`;
+            });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                document.getElementById('delete_id').value = id;
+                document.getElementById('deleteUserForm').action = `{{ url('dashboard/master-user') }}/${id}`;
+            });
+        });
+
+        document.querySelectorAll('.preview-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const imgSrc = this.getAttribute('data-img-src');
+                document.getElementById('previewImage').src = imgSrc;
+            });
+        });
+    }
+
+    // AJAX for Add Form
+    document.getElementById('addUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                form.reset();
+                closeModal('addUserModal');
+                showAlert('success', data.message);
+                refreshTable();
+            } else {
+                showAlert('danger', data.message || 'Failed to add user');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting add form:', error);
+            showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('addUserModal');
+        });
+    });
+
+    // AJAX for Edit Form
+    document.getElementById('editUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST', // Laravel handles PUT via _method
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('editUserModal');
+                showAlert('success', data.message);
+                refreshTable();
+            } else {
+                showAlert('danger', data.message || 'Failed to update user');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting edit form:', error);
+            showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('editUserModal');
+        });
+    });
+
+    // AJAX for Delete Form
+    document.getElementById('deleteUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST', // Laravel handles DELETE via _method
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('deleteUserModal');
+                showAlert('success', data.message);
+                refreshTable();
+            } else {
+                showAlert('danger', data.message || 'Failed to delete user');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting delete form:', error);
+            showAlert('danger', 'An error occurred. Please try again.');
+            closeModal('deleteUserModal');
+        });
+    });
+
+    // Initial attachment of button listeners and table refresh
+    attachButtonListeners();
+    refreshTable();
+});
+</script>
+@endsection
