@@ -16,7 +16,6 @@
 /public/build
 /public/hot
 /public/storage
-/public
 /storage/*.key
 /storage/pail
 /vendor
@@ -28,8 +27,7 @@ Thumbs.db
 /public/img/user/
 /public/img/logo/*.sql.gz
 /public/img/logo/*.exe
-/public/storage/
-/storage/
+
 *.sql
 *.gz
 *.exe

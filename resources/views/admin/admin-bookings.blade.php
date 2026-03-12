@@ -118,7 +118,7 @@ function renderTable(search='') {
                 </span>
             </td>
             <td>
-                <a href="{{ url('dashboard/bookings') }}/${item.id}" class="btn btn-sm btn-primary">
+                <a href="{{ url('dashboard/bookings') }}/${item.name}" class="btn btn-sm btn-primary">
                     View Detail
                 </a>
             </td>

@@ -37,8 +37,7 @@ class bookingController extends Controller
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
-               	CURLOPT_POSTFIELDS => json_encode([
-                    'domain' => "[('state','=','booked')]", // Fixed syntax
+                CURLOPT_POSTFIELDS => json_encode([
                     'fields' => ['name', 'stop_from_id', 'stop_to_id', 'customer_name', 'state']
                 ]),
                 CURLOPT_HTTPHEADER => array(
@@ -55,7 +54,7 @@ class bookingController extends Controller
             // Log response
             //Log::debug('API Response', [
             //    'status' => $httpStatus,
-             //   'body' => $responseBody,
+            //   'body' => $responseBody,
             //]);
 
             // Check for cURL errors
@@ -75,26 +74,30 @@ class bookingController extends Controller
                 if ($httpStatus >= 200 && $httpStatus < 300) {
                     $bookings = $data['records'] ?? [];
                     $count = $data['count'] ?? count($bookings);
-                } else {
+                }
+                else {
                     $errorMessage = $data['error']['message'] ?? ($data['body'] ?? 'Unknown error');
                     $bookings = [];
                     $count = 0;
                     Session::flash('error', 'Failed to fetch vehicle prices: ' . $errorMessage);
                 }
-            } else {
+            }
+            else {
                 // Non-JSON response
                 if ($httpStatus >= 200 && $httpStatus < 300) {
                     $bookings = [];
                     $count = 0;
                     Session::flash('warning', 'Unexpected non-JSON response: ' . $responseBody);
-                } else {
+                }
+                else {
                     $errorMessage = $responseBody ?: 'Unknown error';
                     $bookings = [];
                     $count = 0;
                     Session::flash('error', 'Failed to fetch vehicle prices: ' . $errorMessage);
                 }
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             $bookings = [];
             $count = 0;
             Session::flash('error', 'Error fetching vehicle prices: ' . $e->getMessage());
@@ -103,14 +106,14 @@ class bookingController extends Controller
                 'endpoint' => $endpoint,
             ]);
         }
-      //dd($bookings);
+        //dd($bookings);
 
         return view('admin.admin-bookings', compact('menu'))
             ->with([
-                'apiKey' => $this->apiKey,
-                'bookings' => $bookings,
-                'count' => $count,
-            ]);
+            'apiKey' => $this->apiKey,
+            'bookings' => $bookings,
+            'count' => $count,
+        ]);
     }
 
     public function show($id)
@@ -132,12 +135,11 @@ class bookingController extends Controller
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
-               	CURLOPT_POSTFIELDS => '
-                {
-                    "params": {
-                        "booking_no": "bkw/2025/09/0002"
-                    }
-                }',
+                CURLOPT_POSTFIELDS => json_encode([
+                    'params' => [
+                        'booking_no' => $id
+                    ]
+                ]),
                 CURLOPT_HTTPHEADER => array(
                     'Content-Type: text/plain',
                     'api-key: ' . $this->apiKey,
@@ -152,7 +154,7 @@ class bookingController extends Controller
             // Log response
             //Log::debug('API Response', [
             //    'status' => $httpStatus,
-             //   'body' => $responseBody,
+            //   'body' => $responseBody,
             //]);
 
             // Check for cURL errors
@@ -172,26 +174,30 @@ class bookingController extends Controller
                 if ($httpStatus >= 200 && $httpStatus < 300) {
                     $details = $data['records'] ?? [];
                     $count = $data['count'] ?? count($details);
-                } else {
+                }
+                else {
                     $errorMessage = $data['error']['message'] ?? ($data['body'] ?? 'Unknown error');
                     $details = [];
                     $count = 0;
                     Session::flash('error', 'Failed to fetch vehicle prices: ' . $errorMessage);
                 }
-            } else {
+            }
+            else {
                 // Non-JSON response
                 if ($httpStatus >= 200 && $httpStatus < 300) {
                     $details = [];
                     $count = 0;
                     Session::flash('warning', 'Unexpected non-JSON response: ' . $responseBody);
-                } else {
+                }
+                else {
                     $errorMessage = $responseBody ?: 'Unknown error';
                     $details = [];
                     $count = 0;
                     Session::flash('error', 'Failed to fetch vehicle prices: ' . $errorMessage);
                 }
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             $details = [];
             $count = 0;
             Session::flash('error', 'Error fetching vehicle prices: ' . $e->getMessage());
@@ -200,13 +206,17 @@ class bookingController extends Controller
                 'endpoint' => $endpoint,
             ]);
         }
-      //dd($details);
+        // dd([
+        //     'requested_id' => $id,
+        //     'api_response' => $data ?? null,
+        //     'parsed_details' => $details ?? []
+        // ]);
 
         return view('admin.admin-booking-details', compact('menu'))
             ->with([
-                'apiKey' => $this->apiKey,
-                'details' => $details,
-                'count' => $count,
-            ]);
+            'apiKey' => $this->apiKey,
+            'details' => $details,
+            'count' => $count,
+        ]);
     }
 }
