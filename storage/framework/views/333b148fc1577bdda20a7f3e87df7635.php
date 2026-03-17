@@ -1,29 +1,31 @@
-@extends('template.admin-dashboard')
-@section('title', 'Transaction Detail')
-@section('content')
+<?php $__env->startSection('title', 'Transaction Detail'); ?>
+<?php $__env->startSection('content'); ?>
 <div class="dashboard-content">
     <h2 class="mb-4">Transaction Detail</h2>
   
     <!-- Success/Error Messages -->
     <div id="alert-container">
-        @if (session('error'))
+        <?php if(session('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
+                <?php echo e(session('error')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @endif
-        @if (session('warning'))
+        <?php endif; ?>
+        <?php if(session('warning')): ?>
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                {{ session('warning') }}
+                <?php echo e(session('warning')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @endif
-        @if (session('success'))
+        <?php endif; ?>
+        <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
+                <?php echo e(session('success')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
     <!-- Transaction Detail -->
     <div id="transaction-detail">
@@ -34,9 +36,9 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, script starting...');
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
-            // console.log('API Response:', data);
+            console.log('API Response:', data);
             if (data.success && data.data) {
                 displayTransaction(data.data);
             } else {
@@ -367,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
 
                     <div class="mt-5 pt-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <a href="{{ url('dashboard/transaction') }}" class="btn btn-light border">
+                        <a href="<?php echo e(url('dashboard/transaction')); ?>" class="btn btn-light border">
                             <i class="fas fa-arrow-left me-2"></i>Kembali
                         </a>
                         <div class="d-flex gap-2">
@@ -423,4 +425,5 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTransaction();
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('template.admin-dashboard', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\AdminTiketFerryLegend\resources\views/admin/admin-transaction-detail.blade.php ENDPATH**/ ?>
