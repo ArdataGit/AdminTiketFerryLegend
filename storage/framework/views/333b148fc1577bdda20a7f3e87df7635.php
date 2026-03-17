@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
-            console.log('API Response:', data);
+            // console.log('API Response:', data);
             if (data.success && data.data) {
                 displayTransaction(data.data);
             } else {
@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="small">
                             <span class="text-muted">Nama:</span> ${pax.name || 'N/A'}<br>
+                            <span class="text-muted">Kontak:</span> ${pax.contact || 'N/A'}<br>
                             <span class="text-muted">No. ID:</span> ${pax.id_no || 'N/A'}
                         </div>
                     </div>`;
@@ -160,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="small">
                             <span class="text-muted">Nama:</span> ${pax.name || 'N/A'}<br>
+                            <span class="text-muted">Kontak:</span> ${pax.contact || 'N/A'}<br>
                             <span class="text-muted">No. ID:</span> ${pax.id_no || '-'}
                         </div>
                     </div>`;
@@ -287,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="card-body p-3">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="text-center flex-grow-1">
-                                            <div class="fw-bold h5 mb-0">${returnTrip.stop_from_name}</div>
+                                            <div class="fw-bold h5 mb-0">${returnTrip.stop_to_name}</div>
                                             <div class="text-muted small">${returnTrip.departure_hour}</div>
                                         </div>
                                         <div class="px-3 text-muted">
@@ -296,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <i class="fas fa-ellipsis-h"></i>
                                         </div>
                                         <div class="text-center flex-grow-1">
-                                            <div class="fw-bold h5 mb-0">${returnTrip.stop_to_name}</div>
+                                            <div class="fw-bold h5 mb-0">${returnTrip.stop_from_name}</div>
                                             <div class="text-muted small">${returnTrip.arrival_hour}</div>
                                         </div>
                                     </div>
